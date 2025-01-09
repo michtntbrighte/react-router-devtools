@@ -5,7 +5,7 @@ import { RDTContextProvider, type RdtClientConfig } from "./context/RDTContext.j
 import { useDetachedWindowControls, usePersistOpen, useSettingsContext } from "./context/useRDTContext.js"
 import { useResetDetachmentCheck } from "./hooks/detached/useResetDetachmentCheck.js"
 import { useSyncStateWhenDetached } from "./hooks/detached/useSyncStateWhenDetached.js"
-import { useBorderedRoutes } from "./hooks/useBorderedRoutes.js"
+import { useReactTreeListeners } from "./hooks/useReactTreeListeners.js"
 import { useSetRouteBoundaries } from "./hooks/useSetRouteBoundaries.js"
 import { useTimelineHandler } from "./hooks/useTimelineHandler.js"
 import { ContentPanel } from "./layout/ContentPanel.js"
@@ -20,6 +20,7 @@ import {
 	setStorageItem,
 } from "./utils/storage.js"
 import "../input.css"
+import { Inspector } from "bippy/inspect"
 import { useHotkeys } from "react-hotkeys-hook"
 import type { RdtPlugin } from "../index.js"
 import { Breakpoints } from "./components/Breakpoints.js"
@@ -28,7 +29,6 @@ import { useListenToRouteChange } from "./hooks/detached/useListenToRouteChange.
 import { useDebounce } from "./hooks/useDebounce.js"
 import { useDevServerConnection } from "./hooks/useDevServerConnection.js"
 import { useOpenElementSource } from "./hooks/useOpenElementSource.js"
-
 const recursivelyChangeTabIndex = (node: Element | HTMLElement, remove = true) => {
 	if (remove) {
 		node.setAttribute("tabIndex", "-1")
@@ -43,7 +43,7 @@ const recursivelyChangeTabIndex = (node: Element | HTMLElement, remove = true) =
 const DevTools = ({ plugins: pluginArray }: ReactRouterDevtoolsProps) => {
 	useTimelineHandler()
 	useResetDetachmentCheck()
-	useBorderedRoutes()
+	useReactTreeListeners()
 	useSetRouteBoundaries()
 	useSyncStateWhenDetached()
 	useDevServerConnection()
@@ -102,6 +102,7 @@ const DevTools = ({ plugins: pluginArray }: ReactRouterDevtoolsProps) => {
 			<Trigger isOpen={isOpen} setIsOpen={setIsOpen} />
 			<LiveUrls />
 			<Breakpoints />
+			<Inspector enabled={settings.enableInspector} />
 			<MainPanel isOpen={isOpen}>
 				<div className="flex h-full">
 					<Tabs plugins={plugins} setIsOpen={setIsOpen} />
