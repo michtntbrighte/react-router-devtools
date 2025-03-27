@@ -21,7 +21,7 @@ export const loader = async ({ request, context,devTools, params  }: LoaderFunct
      const also = await new Promise((resolve, reject) => {
       setTimeout(() => {
         resolve("test");
-      }, 2000);
+      }, 200);
     });
      return {
       custom: "data",
@@ -31,12 +31,12 @@ export const loader = async ({ request, context,devTools, params  }: LoaderFunct
   const test = await new Promise((resolve, reject) => {
     setTimeout(() => {
       resolve("test");
-    }, 2000);
+    }, 200);
   });
   const test1 = new Promise((resolve, reject) => {
     setTimeout(() => {
       resolve("test1");
-    }, 3500);
+    }, 300);
   });
   return  { message: "Hello World!", test, test1, data, bigInt: BigInt(10) };
 };
@@ -50,7 +50,7 @@ export const clientLoader =  async ({ request, serverLoader,  devTools }: Client
     const also = await new Promise((resolve, reject) => {
       setTimeout(() => {
         resolve("test");
-      }, 1000);
+      }, 100);
     });
     return {
       custom: "data",
@@ -60,7 +60,7 @@ export const clientLoader =  async ({ request, serverLoader,  devTools }: Client
   const promise =await  new Promise((resolve, reject) => {
     setTimeout(() => {
       resolve("test");
-    }, 2000);
+    }, 200);
   });
   return serverLoaderResults
 };
