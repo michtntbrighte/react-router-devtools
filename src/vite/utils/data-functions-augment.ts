@@ -32,6 +32,8 @@ const transform = (ast: ParseResult<Babel.File>, routeId: string) => {
 		return str.charAt(0).toUpperCase() + str.slice(1)
 	}
 	const transformations: Array<() => void> = []
+
+	const importDeclarations: Babel.ImportDeclaration[] = []
 	trav(ast, {
 		ExportDeclaration(path) {
 			if (path.isExportNamedDeclaration()) {
@@ -86,37 +88,92 @@ const transform = (ast: ParseResult<Babel.File>, routeId: string) => {
 				if (!ALL_EXPORTS.includes(name)) {
 					return
 				}
+
 				const uid = CLIENT_COMPONENT_EXPORTS.includes(name)
 					? getClientHocId(path, `with${uppercaseFirstLetter(name)}Wrapper`)
 					: getServerHocId(path, `with${uppercaseFirstLetter(name)}Wrapper`)
-				transformations.push(() => {
-					const uniqueName = path.scope.generateUidIdentifier(name).name
-					path.replaceWith(
-						t.exportNamedDeclaration(
-							null,
-							[t.exportSpecifier(t.identifier(name), t.identifier(uniqueName))],
-							path.node.source
-						)
-					)
+				const binding = path.scope.getBinding(name)
 
-					// Insert the wrapped export after the modified export statement
-					path.insertAfter(
-						t.exportNamedDeclaration(
-							t.variableDeclaration("const", [
-								t.variableDeclarator(
-									t.identifier(name),
-									t.callExpression(uid, [t.identifier(uniqueName), t.stringLiteral(routeId)])
-								),
-							]),
-							[]
+				if (path.node.source) {
+					// Special condition: export { loader, action } from "./path"
+					const source = path.node.source.value
+
+					importDeclarations.push(
+						t.importDeclaration(
+							[t.importSpecifier(t.identifier(`_${name}`), t.identifier(name))],
+							t.stringLiteral(source)
 						)
 					)
-				})
+					transformations.push(() => {
+						path.insertBefore(
+							t.exportNamedDeclaration(
+								t.variableDeclaration("const", [
+									t.variableDeclarator(
+										t.identifier(name),
+										t.callExpression(uid, [t.identifier(`_${name}`), t.stringLiteral(routeId)])
+									),
+								])
+							)
+						)
+					})
+
+					// Remove the specifier from the exports and add a manual export
+					transformations.push(() => {
+						const remainingSpecifiers = path.node.specifiers.filter(
+							(exportSpecifier) => !(t.isIdentifier(exportSpecifier.exported) && exportSpecifier.exported.name === name)
+						)
+
+						path.replaceWith(t.exportNamedDeclaration(null, remainingSpecifiers, path.node.source))
+					})
+				} else if (binding?.path.isFunctionDeclaration()) {
+					// Replace the function declaration with a wrapped version
+					binding.path.replaceWith(
+						t.variableDeclaration("const", [
+							t.variableDeclarator(
+								t.identifier(name),
+								t.callExpression(uid, [toFunctionExpression(binding.path.node), t.stringLiteral(routeId)])
+							),
+						])
+					)
+				} else if (binding?.path.isVariableDeclarator()) {
+					// Wrap the variable declarator's initializer
+					const init = binding.path.get("init")
+					if (init.node) {
+						init.replaceWith(t.callExpression(uid, [init.node, t.stringLiteral(routeId)]))
+					}
+				} else {
+					transformations.push(() => {
+						const uniqueName = path.scope.generateUidIdentifier(name).name
+						path.replaceWith(
+							t.exportNamedDeclaration(
+								null,
+								[t.exportSpecifier(t.identifier(name), t.identifier(uniqueName))],
+								path.node.source
+							)
+						)
+
+						// Insert the wrapped export after the modified export statement
+						path.insertAfter(
+							t.exportNamedDeclaration(
+								t.variableDeclaration("const", [
+									t.variableDeclarator(
+										t.identifier(name),
+										t.callExpression(uid, [t.identifier(uniqueName), t.stringLiteral(routeId)])
+									),
+								]),
+								[]
+							)
+						)
+					})
+				}
 			}
 		},
 	})
 	for (const transformation of transformations) {
 		transformation()
+	}
+	if (importDeclarations.length > 0) {
+		ast.program.body.unshift(...importDeclarations)
 	}
 	if (serverHocs.length > 0) {
 		ast.program.body.unshift(
