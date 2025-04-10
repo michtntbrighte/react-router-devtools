@@ -1,6 +1,6 @@
-<p align="center">
+<!-- <p align="center">
 <img src="./assets/remix-dev-tools.png" style="display: block; margin: 0 auto;" align="middle" height="240" alt="react-router-devtools"  />
-</p>
+</p> -->
 
 # react-router-devtools
 
@@ -10,6 +10,8 @@
 ![npm](https://img.shields.io/npm/dy/react-router-devtools?style=plastic)
 ![npm](https://img.shields.io/npm/dw/react-router-devtools?style=plastic)
 ![GitHub top language](https://img.shields.io/github/languages/top/forge-42/react-router-devtools?style=plastic)
+
+<img src="./assets/rrd-mascott.png" style="display: block; margin: 0 auto;" align="right" height="240" alt="react-router-devtools"  />
 
 react-router-devtools is an open-source package designed to enhance your development workflow when working with React Router v7+, a full-stack JavaScript framework for building web applications. This package provides a user-friendly interface consisting of three tabs, **Active Page**, **Terminal**, **Settings**, **Errors**, **Network** and **Routes**, along with a side tab called **Timeline**. With react-router-devtools, you can efficiently monitor and manage various aspects of your React Router v7+ projects, including page information, URL parameters, server responses, loader data, routes, and more.
 
