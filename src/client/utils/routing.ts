@@ -48,18 +48,29 @@ const ROUTE_FILLS = {
 	PURPLE: "fill-purple-500 text-white",
 } as const
 
+const UNDISCOVERED_ROUTE_FILLS = {
+	GREEN: "fill-green-500/20 text-white",
+	BLUE: "fill-blue-500/20 text-white",
+	PURPLE: "fill-purple-500/20 text-white",
+}
+
 export function getRouteColor(route: Route) {
+	const isDiscovered = !!window.__reactRouterManifest?.routes[route.id]
+	const FILL = isDiscovered ? ROUTE_FILLS : UNDISCOVERED_ROUTE_FILLS
 	switch (getRouteType(route)) {
 		case "ROOT":
-			return ROUTE_FILLS.PURPLE
-		case "LAYOUT":
-			return ROUTE_FILLS.BLUE
+			return FILL.PURPLE
+
 		case "ROUTE":
-			return ROUTE_FILLS.GREEN
+			return FILL.GREEN
+
+		case "LAYOUT":
+			return FILL.BLUE
 	}
 }
 export type ExtendedRoute = EntryRoute & {
 	url: string
+	file?: string
 	errorBoundary: { hasErrorBoundary: boolean; errorBoundaryId: string | null }
 }
 
@@ -89,8 +100,7 @@ export const createExtendedRoutes = () => {
 				...route,
 				// biome-ignore lint/style/noNonNullAssertion: <explanation>
 				url: convertReactRouterPathToUrl(window.__reactRouterManifest!.routes, route),
-				// biome-ignore lint/style/noNonNullAssertion: <explanation>
-				errorBoundary: findParentErrorBoundary(window.__reactRouterManifest!.routes, route),
+				errorBoundary: findParentErrorBoundary(route),
 			}
 		})
 		.filter((route) => isLeafRoute(route as any))

@@ -7,6 +7,7 @@ import type { ActionEvent, LoaderEvent } from "../server/event-queue.js"
 import type { RequestEvent } from "../shared/request-event.js"
 import { DEFAULT_EDITOR_CONFIG, type EditorConfig, type OpenSourceData, handleOpenSource } from "./editor.js"
 import { type WriteFileData, handleWriteFile } from "./file.js"
+import { runner } from "./node-server.js"
 import { handleDevToolsViteRequest, processPlugins } from "./utils.js"
 import { augmentDataFetchingFunctions } from "./utils/data-functions-augment.js"
 import { injectRdtClient } from "./utils/inject-client.js"
@@ -41,6 +42,15 @@ type ReactRouterViteConfig = {
 	editor?: EditorConfig
 }
 
+type Route = {
+	id: string
+	file: string
+	path?: string
+	index?: boolean
+	caseSensitive?: boolean
+	children?: Route[]
+}
+
 export const defineRdtConfig = (config: ReactRouterViteConfig) => config
 
 export const reactRouterDevTools: (args?: ReactRouterViteConfig) => Plugin[] = (args) => {
@@ -53,6 +63,8 @@ export const reactRouterDevTools: (args?: ReactRouterViteConfig) => Plugin[] = (
 	const includeServer = args?.includeInProd?.server ?? false
 	const includeDevtools = args?.includeInProd?.devTools ?? false
 
+	let routes: Route[] = []
+	let flatRoutes: Route[] = []
 	const appDir = args?.appDir || "./app"
 	const appDirName = appDir.replace("./", "")
 	const shouldInject = (mode: string | undefined, include: boolean) => mode === "development" || include
@@ -61,12 +73,23 @@ export const reactRouterDevTools: (args?: ReactRouterViteConfig) => Plugin[] = (
 		if (!extensions.some((ext) => id.endsWith(ext))) {
 			return
 		}
-		const isRoute = id.includes(`${appDirName}/root`) || id.includes(`${appDirName}/routes`)
-		if (id.includes("node_modules") || id.includes("dist") || id.includes("build") || id.includes("?") || !isRoute) {
+		if (id.includes("node_modules") || id.includes("dist") || id.includes("build") || id.includes("?")) {
 			return
 		}
 
-		const routeId = id.replace(normalizePath(process.cwd()), "").replace(`/${appDirName}/`, "").replace(".tsx", "")
+		const isRoute =
+			id.includes(`${appDirName}/root`) ||
+			flatRoutes.some((route) => id.endsWith(route.file.replace(/^\.\//, "").replace(/^\.\.\//, "")))
+
+		if (!isRoute) {
+			return
+		}
+
+		const routeId = id
+			.replace(normalizePath(process.cwd()), "")
+			.replace(`/${appDirName}/`, "")
+			.replace(".tsx", "")
+			.replace(".ts", "")
 		return routeId
 	}
 	// Set the server config on the process object so that it can be accessed by the plugin
@@ -80,6 +103,64 @@ export const reactRouterDevTools: (args?: ReactRouterViteConfig) => Plugin[] = (
 				return shouldInject(config.mode, includeClient)
 			},
 			async configResolved(resolvedViteConfig) {
+				try {
+					const path = await import("node:path")
+					// Set the route config
+					const routeConfigExport = (await runner.executeFile(path.join(process.cwd(), "./app/routes.ts"))).default
+					const routeConfig = await routeConfigExport
+					routes = routeConfig
+
+					const recursiveFlatten = (routeOrRoutes: Route | Route[]): Route[] => {
+						if (Array.isArray(routeOrRoutes)) {
+							return routeOrRoutes.flatMap((route) => recursiveFlatten(route))
+						}
+						if (routeOrRoutes.children) {
+							return [
+								routeOrRoutes,
+								...recursiveFlatten(
+									routeOrRoutes.children.map((child) => {
+										// ./path.tsx => path
+										// ../path.tsx => path
+										const withoutExtension = child.file
+											.split(".")
+											.slice(0, -1)
+											.join(".")
+											.replace(/^\.\//, "")
+											.replace(/^\.\.\//, "")
+										// ./path.tsx => path
+										// ../path.tsx => path
+										const withoutExtensionParent = routeOrRoutes.file
+											.split(".")
+											.slice(0, -1)
+											.join(".")
+											.replace(/^\.\//, "")
+											.replace(/^\.\.\//, "")
+
+										return {
+											...child,
+											id: child.id ?? withoutExtension,
+											parentId: withoutExtensionParent,
+										}
+									})
+								),
+							]
+						}
+						return [routeOrRoutes]
+					}
+					flatRoutes = routes
+						.map((route) => {
+							// ./path.tsx => path
+							// ../path.tsx => path
+							const withoutExtension = route.file
+								.split(".")
+								.slice(0, -1)
+								.join(".")
+								.replace(/^\.\//, "")
+								.replace(/^\.\.\//, "")
+							return { ...route, parentId: "root", id: route.id ?? withoutExtension }
+						})
+						.flatMap(recursiveFlatten)
+				} catch (e) {}
 				const reactRouterIndex = resolvedViteConfig.plugins.findIndex((p) => p.name === "react-router")
 				const devToolsIndex = resolvedViteConfig.plugins.findIndex((p) => p.name === "react-router-devtools")
 				if (reactRouterIndex >= 0 && devToolsIndex > reactRouterIndex) {
@@ -200,6 +281,15 @@ export const reactRouterDevTools: (args?: ReactRouterViteConfig) => Plugin[] = (
 						JSON.stringify({
 							type: "all-route-info",
 							data: Object.fromEntries(routeInfo.entries()),
+						})
+					)
+				})
+				server.hot.on("routes-info", (data, client) => {
+					client.send(
+						"routes-info",
+						JSON.stringify({
+							type: "routes-info",
+							data: flatRoutes,
 						})
 					)
 				})

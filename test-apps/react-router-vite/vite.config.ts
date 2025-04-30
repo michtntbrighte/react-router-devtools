@@ -37,10 +37,10 @@ export default defineConfig({
     tsconfigPaths()
   ],
   optimizeDeps: {
-    exclude: ["react-router-devtools"]
+    noDiscovery: true
   },
   server: {
     open: true,
-    port: 3005,
+    port: 3000,
   },
 });
