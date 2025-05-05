@@ -197,7 +197,7 @@ export const reactRouterDevTools: (args?: ReactRouterViteConfig) => Plugin[] = (
 			},
 		},
 		{
-			name: "react-router-devtools-inject-context",
+			name: "react-router-devtools:inject-context",
 			apply(config) {
 				return shouldInject(config.mode, includeDevtools)
 			},
@@ -211,7 +211,7 @@ export const reactRouterDevTools: (args?: ReactRouterViteConfig) => Plugin[] = (
 			},
 		},
 		{
-			name: "react-router-devtools-data-function-augment",
+			name: "react-router-devtools:data-function-augment",
 			apply(config) {
 				return shouldInject(config.mode, includeServer)
 			},
@@ -226,7 +226,7 @@ export const reactRouterDevTools: (args?: ReactRouterViteConfig) => Plugin[] = (
 		},
 		{
 			enforce: "pre",
-			name: "react-router-devtools-custom-server",
+			name: "react-router-devtools:custom-server",
 			apply(config) {
 				// Custom server is only needed in development for piping events to the client
 				return config.mode === "development"

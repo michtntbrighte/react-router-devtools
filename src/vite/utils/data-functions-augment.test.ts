@@ -64,7 +64,7 @@ describe("transform", () => {
 			expect(removeWhitespace(result.code)).toStrictEqual(expected)
 		})
 
-		it("should transform the loader export when it's re-exported from another file", () => {
+		it("should transform the loader export when it's re-exported from another file and remove empty export declaration", () => {
 			const result = augmentDataFetchingFunctions(
 				`
 			export { loader } from "./loader.js";
@@ -76,7 +76,7 @@ describe("transform", () => {
 			import { withLoaderWrapper as _withLoaderWrapper   } from "react-router-devtools/server";
       import { loader as _loader } from "./loader.js";
 			export const loader = _withLoaderWrapper(_loader, "test");
-			export {} from "./loader.js";
+
 		`)
 			expect(removeWhitespace(result.code)).toStrictEqual(expected)
 		})
@@ -242,7 +242,7 @@ describe("transform", () => {
 			expect(removeWhitespace(result.code)).toStrictEqual(expected)
 		})
 
-		it("should transform the client action export when it's re-exported from another file", () => {
+		it("should transform the client action export when it's re-exported from another file and remove empty export declaration", () => {
 			const result = augmentDataFetchingFunctions(
 				`
 			export { clientLoader } from "./clientLoader.js";
@@ -254,7 +254,6 @@ describe("transform", () => {
 			import { withClientLoaderWrapper as _withClientLoaderWrapper   } from "react-router-devtools/client";
       import { clientLoader as _clientLoader } from "./clientLoader.js";
 			export const clientLoader = _withClientLoaderWrapper(_clientLoader, "test");
-			export {} from "./clientLoader.js";
 		`)
 			expect(removeWhitespace(result.code)).toStrictEqual(expected)
 		})
@@ -347,7 +346,7 @@ describe("transform", () => {
 			expect(removeWhitespace(result.code)).toStrictEqual(expected)
 		})
 
-		it("should transform the action export when it's re-exported from another file", () => {
+		it("should transform the action export when it's re-exported from another file and remove empty export declaration", () => {
 			const result = augmentDataFetchingFunctions(
 				`
 			export { action } from "./action.js";
@@ -359,7 +358,6 @@ describe("transform", () => {
 			import { withActionWrapper as _withActionWrapper   } from "react-router-devtools/server";
       import { action as _action } from "./action.js";
 			export const action = _withActionWrapper(_action, "test");
-			export {} from "./action.js";
 		`)
 			expect(removeWhitespace(result.code)).toStrictEqual(expected)
 		})
@@ -487,7 +485,7 @@ describe("transform", () => {
 			expect(removeWhitespace(result.code)).toStrictEqual(expected)
 		})
 
-		it("should transform the client action export when it's re-exported from another file", () => {
+		it("should transform the client action export when it's re-exported from another file and remove empty export declaration", () => {
 			const result = augmentDataFetchingFunctions(
 				`
 			export { clientAction } from "./clientAction.js";
@@ -499,7 +497,6 @@ describe("transform", () => {
 			import { withClientActionWrapper as _withClientActionWrapper   } from "react-router-devtools/client";
       import { clientAction as _clientAction } from "./clientAction.js";
 			export const clientAction = _withClientActionWrapper(_clientAction, "test");
-			export {} from "./clientAction.js";
 		`)
 			expect(removeWhitespace(result.code)).toStrictEqual(expected)
 		})

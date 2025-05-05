@@ -108,6 +108,11 @@ const transform = (ast: ParseResult<Babel.File>, routeId: string) => {
 						)
 
 						path.replaceWith(t.exportNamedDeclaration(null, remainingSpecifiers, path.node.source))
+
+						const newRemainingSpecifiers = path.node.specifiers.length
+						if (newRemainingSpecifiers === 0) {
+							path.remove()
+						}
 					})
 				} else if (binding?.path.isFunctionDeclaration()) {
 					// Replace the function declaration with a wrapped version
