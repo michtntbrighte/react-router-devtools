@@ -245,7 +245,7 @@ const storeAndEmitActionOrLoaderInfo = async (
 	const port = process.rdt_port
 
 	if (port) {
-		fetch(`http://localhost:${port}/react-router-devtools-request`, {
+		fetch(`http://localhost:${port}/__rrdt`, {
 			method: "POST",
 			body: JSON.stringify(event, bigIntReplacer),
 		})

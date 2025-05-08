@@ -28,7 +28,7 @@ export const handleDevToolsViteRequest = (
 	next: Connect.NextFunction,
 	cb: (data: any) => void
 ) => {
-	if (req.url?.includes("open-source")) {
+	if (req.url?.includes("_rrdt/open-source")) {
 		const searchParams = new URLSearchParams(req.url.split("?")[1])
 		const source = searchParams.get("source")
 		const line = searchParams.get("line")
@@ -49,7 +49,7 @@ export const handleDevToolsViteRequest = (
 		res.end()
 		return
 	}
-	if (!req.url?.includes("react-router-devtools-request")) {
+	if (!req.url?.includes("__rrdt")) {
 		return next()
 	}
 

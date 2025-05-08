@@ -378,7 +378,7 @@ export const reactRouterDevTools: (args?: ReactRouterViteConfig) => Plugin[] = (
 
 							const column = line.indexOf("console.")
 							const location = `${id.replace(normalizePath(process.cwd()), "")}:${lineNumber + 1}:${column + 1}`
-							const logMessage = `'${chalk.magenta("LOG")} ${chalk.blueBright(`${location} - http://localhost:${port}/open-source?source=${encodeURIComponent(id.replace(normalizePath(process.cwd()), ""))}&line=${lineNumber + 1}&column=${column + 1}`)}\\n → '`
+							const logMessage = `'${chalk.magenta("LOG")} ${chalk.blueBright(`${location} - http://localhost:${port}/_rrdt/open-source?source=${encodeURIComponent(id.replace(normalizePath(process.cwd()), ""))}&line=${lineNumber + 1}&column=${column + 1}`)}\\n → '`
 							if (line.includes("console.log(")) {
 								const newLine = `console.log(${logMessage},`
 								return line.replace("console.log(", newLine)
