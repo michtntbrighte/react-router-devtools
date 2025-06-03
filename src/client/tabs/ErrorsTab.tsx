@@ -18,6 +18,7 @@ const ErrorsTab = () => {
 	const [hasHydrationMismatch, setHasHydrationMismatch] = useState(false)
 
 	useEffect(() => {
+		console.log("REMIX DEV TOOLS: USEEFFECT")
 		if (typeof window === "undefined") return
 		if (!window.HYDRATION_OVERLAY) {
 			return
@@ -25,13 +26,22 @@ const ErrorsTab = () => {
 		const ssrHtml = window.HYDRATION_OVERLAY?.SSR_HTML
 		const newCSRHtml = window.HYDRATION_OVERLAY?.CSR_HTML
 
+		console.log("REMIX DEV TOOLS: SSR HTML", ssrHtml)
+		console.log("REMIX DEV TOOLS: CSR HTML", CSRHtml)
+
 		if (!ssrHtml || !newCSRHtml) return
 
 		const newSSR = beautify(ssrHtml, { format: "html" })
 		const newCSR = beautify(newCSRHtml, { format: "html" })
+
+		console.log("REMIX DEV TOOLS: SSR HTML BEAUTIFIED", newSSR)
+		console.log("REMIX DEV TOOLS: CSR HTML BEAUTIFIED", newCSR)
+
 		setSSRHtml(newSSR)
 		setCSRHtml(newCSR)
 		setHasHydrationMismatch(window.HYDRATION_OVERLAY?.ERROR ?? false)
+
+		console.log("REMIX DEV TOOLS: HYDRATION ERROR", window.HYDRATION_OVERLAY?.ERROR)
 	}, [])
 
 	return (
